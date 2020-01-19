@@ -1,0 +1,110 @@
+
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<!-- Load d3.js -->
+<script src="https://d3js.org/d3.v4.js"></script>
+
+<!-- Create a div where the graph will take place -->
+<div id="my_dataviz" style="width:1500px" ></div>
+
+
+<script>
+
+// set the dimensions and margins of the graph
+var margin = {top: 30, right: 30, bottom: 30, left: 110},
+  width = 700 - margin.left - margin.right,
+  height = 700 - margin.top - margin.bottom;
+
+// append the svg object to the body of the page
+var svg = d3.select("#my_dataviz")
+.append("svg")
+  .attr("width", width + margin.left + margin.right)
+  .attr("height", height + margin.top + margin.bottom+100)
+.append("g")
+  .attr("transform",
+        "translate(" + margin.left + "," + margin.top + ")");
+
+// Labels of row and columns
+var winner = ["Locutus", "PurpleWave", "BananaBrain", "DaQin", "Steamhammer", "ZZZKBot", "Microwave", "Iron", "XiaoYi", "McRave", "UAlbertaBot", "AITP", "BunkerBoxeR"]
+var losser = ["Locutus", "PurpleWave", "BananaBrain", "DaQin", "Steamhammer", "ZZZKBot", "Microwave", "Iron", "XiaoYi", "McRave","UAlbertaBot", "AITP", "BunkerBoxeR"]
+
+// Build X scales and axis:
+
+ var x = d3.scaleBand()
+ .range([ 0, width ])
+ .domain(winner)
+ .padding(0.01);
+ svg.append("g")
+ .attr("transform", "translate(0," + height + ") ")
+ .call(d3.axisBottom(x).tickSize(25)) 
+ .selectAll("text")
+ .attr("transform","translate(20) rotate(35)")
+ .style("font-size", "13px")
+  
+	
+
+// Build Y scales and axis:
+var y = d3.scaleBand()
+  .range([ height, 0 ])
+  .domain(losser)
+  .padding(0.01);
+svg.append("g")
+  .call(d3.axisLeft(y))
+  .style("font-size", "13px");
+
+// Build color scale
+var myColor = d3.scaleLinear()
+  .range(["#ffffd9", "#081d58"])
+  .domain([1,100])
+
+//Read the data
+d3.csv("./heatmap4.csv", function(data) {
+
+  // create a tooltip
+  var tooltip = d3.select("#my_dataviz")
+    .append("div")
+    .style("opacity", 0)
+    .attr("class", "tooltip")
+	.style("float","Right")
+    <!-- .style("background-color", "white") -->
+    <!-- .style("border", "solid") -->
+    <!-- .style("border-width", "2px") -->
+    <!-- .style("border-radius", "5px") -->
+    .style("padding", "5px")
+    .style("margin-top", "80px")
+	.style("margin-right", "250px")
+
+  // Three function that change the tooltip when user hover / move / leave a cell
+  var mouseover = function(d) {
+    tooltip.style("opacity", 1)
+	
+  }
+  var mousemove = function(d) {
+    tooltip
+      <!-- .html("Winner Bot: " + d.winnerBot + "," + "Losser Bot: " +d.losserBot + "," + "Winning Count: " + d.value + "<br>Benzene map count:" + d.Benzene +"<br>Destination map count:" + d.Destination + "<br>HeartbreakRidge map count:" + d.HeartbreakRidge + "<br>Aztec map count:" + d.Aztec + "<br>TauCross map count:" + d.TauCross + "<br>Andromeda map count:" + d.Andromeda +"<br>CircuitBreaker map count:" + d.CircuitBreaker +"<br>EmpireoftheSun map count:" + d.EmpireoftheSun +"<br>Fortress map count:" + d.Fortress +"<br>Python map count:" + d.Python) -->
+	  .html("<table border='2'><tr><td>Winner Bot</td><td>"+ d.winnerBot +"</td></tr><tr><td>Losser Bot</td><td>"+ d.losserBot +"</td></tr><tr><td>Winning Count</td><td>"+ d.value +"</td></tr><tr><td>Benzene map count</td><td>"+ d.Benzene +"</td></tr><tr><td>Destination map count</td><td>"+ d.Destination +"</td></tr><tr><td>HeartbreakRidge map count</td><td>"+ d.HeartbreakRidge +"</td></tr><tr><td>Aztec map count</td><td>"+ d.Aztec +"</td></tr><tr><td>TauCross map count</td><td>"+ d.TauCross +"</td></tr><tr><td>Andromeda map count</td><td>"+ d.Andromeda +"</td></tr><tr><td>CircuitBreaker</td><td>"+ d.CircuitBreaker +"</td></tr><tr><td>EmpireoftheSun map count</td><td>"+ d.EmpireoftheSun +"</td></tr><tr><td>Fortress map count</td><td>"+ d.Fortress +"</td></tr><tr><td>Python map count</td><td>"+ d.Python +"</td></tr></table>")
+	  .style("width","500px")
+      .style("left", "1000px")
+      .style("top", (d3.mouse(this)[1]) + "px")
+  }
+  var mouseleave = function(d) {
+    tooltip.style("opacity", 0)
+  }
+
+  // add the squares
+  svg.selectAll()
+    .data(data, function(d) {return d.winnerBot+':'+d.losserBot;})
+    .enter()
+    .append("rect")
+      .attr("x", function(d) { return x(d.winnerBot) })
+      .attr("y", function(d) { return y(d.losserBot) })
+      .attr("width", x.bandwidth()  )
+      .attr("height", y.bandwidth() )
+      .style("fill", function(d) { return myColor(d.value)} )
+    .on("mouseover", mouseover)
+    .on("mousemove", mousemove)
+    .on("mouseleave", mouseleave)
+})
+
+</script>

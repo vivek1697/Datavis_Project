@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+body {
+  font: 10px sans-serif;
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.bar {
+  fill: orange;
+}
+
+.bar:hover {
+  fill: orangered ;
+}
+
+.x.axis path {
+  display: none;
+}
+
+.d3-tip {
+  line-height: 1;
+  font-weight: bold;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  border-radius: 2px;
+}
+
+/* Creates a small triangle extender for the tooltip */
+.d3-tip:after {
+  box-sizing: border-box;
+  display: inline;
+  font-size: 10px;
+  width: 100%;
+  line-height: 1;
+  color: rgba(0, 0, 0, 0.8);
+  content: "\25BC";
+  position: absolute;
+  text-align: center;
+}
+
+/* Style northward tooltips differently */
+.d3-tip.n:after {
+  margin: -1px 0 0 0;
+  top: 100%;
+  left: 0;
+}
+</style>
+<body>
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.v0.6.3.js"></script>
+<script>
+
+    var newdataset = []
+    var tempdataset = []
+    var trimValue = []
+
+var margin = {top: 40, right: 20, bottom: 80, left: 190},
+    width = 960 - margin.left - margin.right,
+    height = 600 - margin.top - margin.bottom;
+
+var formatPercent = d3.format(".0%");
+
+var x = d3.scale.ordinal()
+    .rangeRoundBands([0, width], .1	);
+
+var y = d3.scale.linear()
+    .range([height, 0]);
+
+var xAxis = d3.svg.axis()
+	.scale(x)
+    .orient("bottom")
+	.tickFormat(function(d){
+		return d.slice(-4)
+	});
+
+
+var yAxis = d3.svg.axis()
+    .scale(y)
+    .orient("left");
+   
+
+var tip = d3.tip()
+  .attr('class', 'd3-tip')
+  .offset([-10, 0])
+  .html(function(d) {
+    return "<strong>Count:</strong> <span style='color:red'>" + d[1] + "</span>";
+  })
+
+var svg = d3.select("body").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+svg.call(tip);
+
+d3.json("./game_data.json",function(data){
+        console.log(data);
+        var ipcount = d3.nest()
+            .key(function(d) { return d.gameEndType != "NORMAL"})
+            .key(function(d) { return d.addresses[0]; })
+            
+            .rollup(function(v) { return v.length; })
+            .entries(data);
+            
+          newdataset.push(ipcount[1].values)
+          console.log(newdataset[0])
+          
+        
+        for (var j=0;j<newdataset[0].length;j++){
+        tempdataset.push([newdataset[0][j].key, newdataset[0][j].values])
+        
+    }
+        
+        
+        console.log(tempdataset)
+     var newAr = tempdataset.map((d)=>d[0]) 
+    var sortedDS = newAr.sort((a,b) => { return  a.split('.')[0] - b.split('.')[0] || a.split('.')[1] - b.split('.')[1] || a.split('.')[2] - b.split('.')[2] || a.split('.')[3] - b.split('.')[3]
+
+    	
+ });
+    /*for each (var a in sortedDS){
+    	console.log(a);
+    }
+    */
+ 
+ /*for (var i=0;i<sortedDS.length;i++){
+ 	console.log(sortedDS);
+        trimValue.push(i.slice(8))}*/
+		
+  x.domain(sortedDS);
+  y.domain([0, d3.max(tempdataset, d => d[1])+30]);
+
+  svg.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0," + height + ")")
+      .call(xAxis)
+      .style("font-size", "20px")
+     svg.append("text")      // text label for the x axis
+        .attr("x", 380 )
+        .attr("y",  550 )
+        .style("text-anchor", "middle")
+        .style("font-size", "22px")
+        .text("I/P Addresses");
+		
+
+  svg.append("g")
+      .attr("class", "y axis")
+      .call(yAxis)
+      .style("font-size", "20px")
+    .append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("y", 6)
+      .attr("dy", ".91em")
+      .style("text-anchor", "end")
+      .style("font-size", "22px")
+      .text("Crash Count");
+
+  svg.selectAll(".bar")
+      .data(tempdataset)
+    .enter().append("rect")
+      .attr("class", "bar")
+      .attr("x", (g) => x(g[0]))
+      .attr("width", x.rangeBand())
+      .attr("y", (g) => y(g[1]))
+      .attr('height', (g) => height - y(g[1]))
+      .on('mouseover', tip.show)
+      .on('mouseout', tip.hide)
+
+});
+
+
+
+</script>
